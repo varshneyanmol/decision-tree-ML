@@ -20,8 +20,10 @@ my_data = [
     ['kiwitobes', 'France', 'yes', 19, 'Basic']
 ]
 
+
 def getdata():
     return my_data
+
 
 class decisionnode:
     def __init__(self, col = -1, value = None, tb = None, fb = None, results = None):
@@ -30,6 +32,7 @@ class decisionnode:
         self.tb = tb
         self.fb = fb
         self.results = results
+
 
 def uniquecounts(rows):
     results = collections.defaultdict(int)
@@ -68,11 +71,13 @@ def divideset(rows, column, value):
 
     return (set1, set2)
 
+
 def columnvalues(rows, col):
     column_values = []
     for row in rows:
         if row[col] not in column_values: column_values.append(row[col])
     return column_values
+
 
 def buildtree(rows):
     if len(rows) == 0:
@@ -112,18 +117,31 @@ def classify(tree, observations):
         return tree.results
     else:
         value = observations[tree.col]
-        branch = None
-        if isinstance(value, int) or isinstance(value, float):
-            if value >= tree.value:
-                branch = tree.tb
-            else:
-                branch = tree.fb
+        if value == None:
+            tr = classify(tree.tb, observations)
+            fr = classify(tree.fb, observations)
+            t_count = sum(tr.values())
+            f_count = sum(fr.values())
+            tw = t_count/(t_count + f_count)
+            fw = f_count/(t_count + f_count)
+            result = collections.defaultdict(float)
+            for k, v in tr.items():
+                result[k] = v*tw
+            for k, v in fr.items():
+                result[k] = v*fw
+            return result
         else:
-            if value == tree.value:
-                branch = tree.tb
+            if isinstance(value, int) or isinstance(value, float):
+                if value >= tree.value:
+                    branch = tree.tb
+                else:
+                    branch = tree.fb
             else:
-                branch = tree.fb
-        return classify(branch, observations)
+                if value == tree.value:
+                    branch = tree.tb
+                else:
+                    branch = tree.fb
+            return classify(branch, observations)
 
 
 if __name__ == '__main__':
@@ -133,5 +151,8 @@ if __name__ == '__main__':
     #print(divideset(my_data, 0, 'slashdot'))
     #print(str(buildtree(my_data).tb.tb.results))
     tree = buildtree(my_data)
-    print(classify(tree, ['(direct)', 'USA', 'yes','5']))
-    #print(classify(tree, ['slashdot', 'France', 'yes', 19, 'None']))
+    print(classify(tree, ['(direct)', 'USA', 'yes', '5']))
+    print(classify(tree, ['google', 'France', None, None]))
+    print(classify(tree, ['google', None, 'yes', None]))
+    print(classify(tree, [None, None, None, None]))
+    print(classify(tree, ['slashdot', 'France', 'yes', 19, 'None']))
